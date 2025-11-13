@@ -63,19 +63,31 @@ python main.py
 
 ## Building Executable
 
-To create a standalone Windows executable:
+To create a standalone Windows executable with optimizations:
 
 ```bash
 pip install pyinstaller
-python -m PyInstaller Marwan_CRM.spec
+python -m PyInstaller Marwan_CRM.spec --clean
 ```
 
-Or use the command line:
+Or use the optimized build script:
 ```bash
-python -m PyInstaller --onefile --noconsole --name "Marwan_CRM" --add-data "updater_script.py;." main.py
+build_optimized.bat
 ```
 
 The executable will be created in the `dist` folder.
+
+### Size Optimizations
+
+The build includes several optimizations to reduce executable size:
+- Excludes unused modules (tkinter, testing frameworks, etc.)
+- Strips debug symbols
+- Python bytecode optimization
+- UPX compression (if available - can reduce size by 20-40%)
+
+**Expected size:** ~100-120 MB (vs ~150 MB without optimizations)
+
+For more details, see [BUILD_OPTIMIZATION.md](BUILD_OPTIMIZATION.md).
 
 **Note:** The `updater_script.py` is automatically embedded in the executable via the spec file, so no separate file is needed.
 
