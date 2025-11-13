@@ -166,6 +166,38 @@ def get_app_directory() -> Path:
         return Path(__file__).parent.parent
 
 
+def get_embedded_updater_script() -> Optional[Path]:
+    """
+    Get the path to updater_script.py, extracting it from embedded resources if needed.
+    
+    Returns:
+        Path to updater_script.py or None if not found
+    """
+    # First, try to find it in the app directory (for development or if already extracted)
+    app_dir = get_app_directory()
+    script_path = app_dir / "updater_script.py"
+    
+    if script_path.exists():
+        return script_path
+    
+    # If running as frozen executable, try to extract from embedded resources
+    if getattr(sys, 'frozen', False):
+        try:
+            # PyInstaller stores data files in sys._MEIPASS
+            if hasattr(sys, '_MEIPASS'):
+                # Try to find updater_script.py in the bundled resources
+                bundled_script = Path(sys._MEIPASS) / "updater_script.py"
+                if bundled_script.exists():
+                    # Extract to app directory
+                    temp_script = app_dir / "updater_script.py"
+                    shutil.copy2(bundled_script, temp_script)
+                    return temp_script
+        except Exception as e:
+            print(f"Error extracting embedded updater script: {e}")
+    
+    return None
+
+
 def get_app_executable() -> Path:
     """
     Get the path to the main application executable.
@@ -255,14 +287,16 @@ def run_updater_script(update_file: Path, app_path: Path):
     """
     Launch the standalone updater script to handle the update process.
     This allows the main app to close while updater replaces it.
+    Extracts the script from embedded resources if needed.
     
     Args:
         update_file: Path to downloaded update file
         app_path: Path to current application executable
     """
-    updater_script = get_app_directory() / "updater_script.py"
+    # Get updater script (extracts from embedded resources if needed)
+    updater_script = get_embedded_updater_script()
     
-    if not updater_script.exists():
+    if not updater_script or not updater_script.exists():
         print("Warning: updater_script.py not found. Update cannot proceed automatically.")
         return False
     

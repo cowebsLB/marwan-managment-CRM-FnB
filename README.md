@@ -25,8 +25,9 @@ Download the latest release from the [Releases](https://github.com/cowebsLB/marw
 **Installation:**
 1. Download `Marwan_CRM_vX.X.X.zip` from the releases page
 2. Extract all files to a folder of your choice
-3. Make sure both `Marwan_CRM.exe` and `updater_script.py` are in the same folder
-4. Double-click `Marwan_CRM.exe` to run
+3. Double-click `Marwan_CRM.exe` to run
+
+**Note:** The updater script is embedded in the executable and will be automatically extracted when needed for updates.
 
 ## Development Setup
 
@@ -76,7 +77,7 @@ python -m PyInstaller --onefile --noconsole --name "Marwan_CRM" --add-data "upda
 
 The executable will be created in the `dist` folder.
 
-**Note:** Make sure to include `updater_script.py` in the same directory as the executable for the update system to work.
+**Note:** The `updater_script.py` is automatically embedded in the executable via the spec file, so no separate file is needed.
 
 ## Database
 
@@ -92,7 +93,7 @@ The application includes an automatic update system that checks for new releases
 - The system will check for new versions and notify you if an update is available
 - Updates can be downloaded and installed automatically
 
-**Important:** Keep `updater_script.py` in the same folder as `Marwan_CRM.exe` for updates to work.
+**Note:** The updater script is embedded in the executable and will be automatically extracted when needed. No separate files required.
 
 ## Project Structure
 
