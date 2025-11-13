@@ -74,9 +74,8 @@ class MainWindow(QMainWindow):
         # Apply styles
         self.apply_styles()
         
-        # Check for updates on startup (optional - can be disabled)
-        # Uncomment the line below to enable auto-update check on startup
-        # QTimer.singleShot(2000, self.check_for_updates)  # Check after 2 seconds
+        # Auto-check for updates on startup (after 2 seconds delay)
+        QTimer.singleShot(2000, self.check_for_updates)
     
     def create_sidebar(self) -> QWidget:
         """Create the sidebar navigation"""
@@ -147,13 +146,6 @@ class MainWindow(QMainWindow):
         
         layout.addStretch()
         
-        # Update button
-        btn_update = QPushButton("🔄 Check for Updates")
-        btn_update.setFixedHeight(35)
-        btn_update.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_update.clicked.connect(self.check_for_updates)
-        layout.addWidget(btn_update)
-        
         return top_bar
     
     def navigate_to_page(self, index: int):
@@ -208,8 +200,21 @@ class MainWindow(QMainWindow):
             current_widget.refresh()
     
     def check_for_updates(self):
-        """Open the update dialog"""
-        show_update_dialog(self, auto_check=True)
+        """Check for updates silently in background"""
+        # Check for updates without showing dialog unless update is available
+        from utils.updater import check_for_updates, APP_VERSION, GITHUB_REPO
+        from PyQt6.QtWidgets import QMessageBox
+        
+        try:
+            update_available, latest_version, release_info = check_for_updates(GITHUB_REPO)
+            
+            if update_available and release_info:
+                # Show update dialog only if update is available
+                show_update_dialog(self, auto_check=True)
+            # If no update or no releases, do nothing (silent check)
+        except Exception as e:
+            # Silently fail - don't interrupt user experience
+            pass
     
     def apply_styles(self):
         """Apply application-wide styles"""
