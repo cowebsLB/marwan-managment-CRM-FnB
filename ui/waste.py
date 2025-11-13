@@ -28,9 +28,37 @@ class WasteDialog(QDialog):
         self.waste_id = waste_id
         self.setWindowTitle("Edit Waste Entry" if waste_id else "Add Waste Entry")
         self.setModal(True)
-        self.setFixedWidth(400)
+        self.setFixedWidth(420)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: white;
+            }
+            QLabel {
+                color: #2c3e50;
+                font-size: 13px;
+                font-weight: 500;
+            }
+            QLineEdit, QDateEdit {
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 13px;
+                background-color: white;
+            }
+            QLineEdit:focus, QDateEdit:focus {
+                border: 2px solid #3498db;
+            }
+            QPushButton {
+                padding: 8px 20px;
+                border-radius: 4px;
+                font-weight: 600;
+                font-size: 13px;
+            }
+        """)
         
         layout = QFormLayout(self)
+        layout.setSpacing(15)
+        layout.setContentsMargins(25, 25, 25, 25)
         
         self.item_input = QLineEdit()
         self.quantity_input = QLineEdit()
@@ -46,12 +74,33 @@ class WasteDialog(QDialog):
         layout.addRow("Date:", self.date_input)
         
         buttons = QHBoxLayout()
-        btn_save = QPushButton("Save")
-        btn_cancel = QPushButton("Cancel")
+        buttons.setSpacing(10)
         
+        btn_save = create_icon_button("Save", "save")
+        btn_save.setStyleSheet("""
+            QPushButton {
+                background-color: #27ae60;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #229954;
+            }
+        """)
         btn_save.clicked.connect(self.accept)
+        
+        btn_cancel = create_icon_button("Cancel", "cancel")
+        btn_cancel.setStyleSheet("""
+            QPushButton {
+                background-color: #95a5a6;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #7f8c8d;
+            }
+        """)
         btn_cancel.clicked.connect(self.reject)
         
+        buttons.addStretch()
         buttons.addWidget(btn_save)
         buttons.addWidget(btn_cancel)
         layout.addRow(buttons)
