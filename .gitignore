@@ -41,7 +41,7 @@ wheels/
 Thumbs.db
 
 # PyInstaller
-*.spec
+# *.spec  # Keep spec files for reproducible builds
 
 # Logs
 *.log
