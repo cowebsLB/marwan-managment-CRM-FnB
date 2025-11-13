@@ -40,21 +40,32 @@ def get_latest_release_info(repo: str) -> Optional[Dict]:
         repo: GitHub repository in format "username/repository"
     
     Returns:
-        Dictionary with release info or None if error
+        Dictionary with release info or None if error or no releases found
     """
     api_url = f"{GITHUB_API_BASE}/{repo}/releases/latest"
     
     try:
         if HAS_REQUESTS:
             response = requests.get(api_url, timeout=10)
+            # 404 means no releases exist yet - this is normal, not an error
+            if response.status_code == 404:
+                return None
             response.raise_for_status()
             return response.json()
         else:
-            with urlopen(api_url, timeout=10) as response:
-                data = json.loads(response.read().decode())
-                return data
+            try:
+                with urlopen(api_url, timeout=10) as response:
+                    data = json.loads(response.read().decode())
+                    return data
+            except URLError as e:
+                # 404 means no releases exist yet - this is normal
+                if hasattr(e, 'code') and e.code == 404:
+                    return None
+                raise
     except Exception as e:
-        print(f"Error fetching release info: {e}")
+        # Only log actual errors, not "no releases" cases
+        if "404" not in str(e):
+            print(f"Error fetching release info: {e}")
         return None
 
 

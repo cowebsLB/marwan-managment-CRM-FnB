@@ -33,6 +33,9 @@ class UpdateCheckThread(QThread):
             update_available, latest_version, release_info = check_for_updates(self.repo)
             if release_info:
                 self.update_available.emit(update_available, latest_version, release_info)
+            elif latest_version is None:
+                # No releases found yet - this is normal for new repositories
+                self.update_available.emit(False, "", {})
             else:
                 self.error_occurred.emit("Could not fetch release information")
         except Exception as e:
@@ -175,6 +178,14 @@ class UpdateDialog(QDialog):
         self.check_button.setEnabled(True)
         self.latest_version = latest_version
         self.release_info = release_info
+        
+        # Handle case where no releases exist yet
+        if not latest_version and not release_info:
+            self.status_label.setText(
+                "ℹ️ No releases found on GitHub yet.\n"
+                "Releases will appear here once published."
+            )
+            return
         
         if update_available:
             self.status_label.setText(
