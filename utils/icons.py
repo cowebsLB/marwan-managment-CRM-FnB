@@ -23,6 +23,7 @@ def get_icon(icon_name: str) -> QIcon:
         'products': QStyle.StandardPixmap.SP_DirIcon,
         'waste': QStyle.StandardPixmap.SP_TrashIcon,
         'assets': QStyle.StandardPixmap.SP_FileDialogDetailedView,
+        'analytics': QStyle.StandardPixmap.SP_FileDialogInfoView,
         'add': QStyle.StandardPixmap.SP_FileDialogNewFolder,
         'edit': QStyle.StandardPixmap.SP_FileDialogListView,
         'delete': QStyle.StandardPixmap.SP_TrashIcon,

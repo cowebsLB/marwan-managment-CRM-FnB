@@ -4,7 +4,7 @@ Waste page for the CRM application
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget,
     QTableWidgetItem, QLineEdit, QDialog, QFormLayout, QMessageBox,
-    QHeaderView, QAbstractItemView, QDateEdit, QSplitter
+    QHeaderView, QAbstractItemView, QDateEdit, QFrame, QScrollArea, QSizePolicy
 )
 from PyQt6.QtCore import Qt, QDate, QSize
 from PyQt6.QtGui import QFont
@@ -12,13 +12,12 @@ from utils.icons import get_icon, create_icon_button
 
 from database.db import (
     get_all_waste, add_waste, update_waste, delete_waste, get_waste,
-    get_waste_by_reason
+    get_waste_by_reason, get_total_waste_quantity
 )
 from utils.helpers import (
     show_error_message, show_success_message, show_confirm_dialog,
     validate_integer, export_to_csv, export_to_excel
 )
-from utils.charts import create_waste_by_reason_chart
 
 
 class WasteDialog(QDialog):
@@ -137,7 +136,16 @@ class WastePage(QWidget):
     
     def init_ui(self):
         """Initialize the waste UI"""
-        layout = QVBoxLayout(self)
+        # Create scroll area for better navigation
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll.setStyleSheet("QScrollArea { border: none; }")
+        
+        content_widget = QWidget()
+        content_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        layout = QVBoxLayout(content_widget)
         layout.setContentsMargins(30, 30, 30, 30)
         layout.setSpacing(20)
         
@@ -154,7 +162,8 @@ class WastePage(QWidget):
         # Search bar
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search waste entries...")
-        self.search_input.setFixedWidth(300)
+        self.search_input.setMaximumWidth(300)
+        self.search_input.setMinimumWidth(200)
         self.search_input.setFixedHeight(35)
         self.search_input.setStyleSheet("""
             QLineEdit {
@@ -232,14 +241,23 @@ class WastePage(QWidget):
         
         layout.addLayout(header)
         
-        # Splitter for table and chart
-        splitter = QSplitter(Qt.Orientation.Horizontal)
+        # Summary cards - use stretch to ensure they fit
+        summary_layout = QHBoxLayout()
+        summary_layout.setSpacing(15)
         
-        # Table widget
-        table_widget = QWidget()
-        table_layout = QVBoxLayout(table_widget)
-        table_layout.setContentsMargins(0, 0, 0, 0)
+        self.total_waste_card = self.create_summary_card("Total Waste", "0", "#e74c3c")
+        self.avg_waste_card = self.create_summary_card("Avg per Entry", "0", "#f39c12")
+        self.reasons_card = self.create_summary_card("Unique Reasons", "0", "#9b59b6")
+        self.items_card = self.create_summary_card("Unique Items", "0", "#34495e")
         
+        summary_layout.addWidget(self.total_waste_card, stretch=1)
+        summary_layout.addWidget(self.avg_waste_card, stretch=1)
+        summary_layout.addWidget(self.reasons_card, stretch=1)
+        summary_layout.addWidget(self.items_card, stretch=1)
+        
+        layout.addLayout(summary_layout)
+        
+        # Table with professional styling - set max height so it scrolls internally
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["ID", "Item", "Quantity", "Reason", "Date"])
@@ -247,6 +265,7 @@ class WastePage(QWidget):
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
+        self.table.setMaximumHeight(400)  # Set max height so table scrolls internally
         self.table.setStyleSheet("""
             QTableWidget {
                 background-color: white;
@@ -278,43 +297,74 @@ class WastePage(QWidget):
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self.show_context_menu)
         
-        table_layout.addWidget(self.table)
-        splitter.addWidget(table_widget)
+        layout.addWidget(self.table)
         
-        # Chart widget
-        chart_widget = QWidget()
-        chart_widget.setStyleSheet("""
-            QWidget {
+        scroll.setWidget(content_widget)
+        
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll)
+    
+    def create_summary_card(self, title: str, value: str, color: str) -> QFrame:
+        """Create a summary card widget"""
+        card = QFrame()
+        card.setObjectName("summaryCard")
+        card.setFixedHeight(100)
+        card.setMinimumWidth(150)
+        card.setStyleSheet(f"""
+            QFrame#summaryCard {{
                 background-color: white;
-                border: 1px solid #e1e8ed;
                 border-radius: 8px;
-            }
+                border: 1px solid #e1e8ed;
+            }}
+            QFrame#summaryCard:hover {{
+                border: 2px solid {color};
+                box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+            }}
         """)
-        chart_layout = QVBoxLayout(chart_widget)
-        chart_layout.setContentsMargins(20, 20, 20, 20)
         
-        chart_title = QLabel("Waste by Reason")
-        chart_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        chart_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        chart_title.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
-        chart_layout.addWidget(chart_title)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(8)
         
-        self.chart_container = QWidget()
-        chart_layout.addWidget(self.chart_container)
+        title_label = QLabel(title)
+        title_label.setFont(QFont("Segoe UI", 9))
+        title_label.setStyleSheet("color: #7f8c8d; font-weight: 500;")
+        title_label.setWordWrap(True)
+        layout.addWidget(title_label)
         
-        splitter.addWidget(chart_widget)
+        value_label = QLabel(value)
+        value_label.setFont(QFont("Segoe UI", 22, QFont.Weight.Bold))
+        value_label.setStyleSheet(f"color: {color};")
+        value_label.setObjectName("valueLabel")
+        value_label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        layout.addWidget(value_label)
         
-        # Set splitter proportions (60% table, 40% chart)
-        splitter.setSizes([600, 400])
-        
-        layout.addWidget(splitter)
+        return card
     
     def refresh(self):
-        """Refresh waste table and chart"""
+        """Refresh waste table"""
         waste_entries = get_all_waste()
         self.all_waste = waste_entries
         self.populate_table(waste_entries)
-        self.update_chart()
+        
+        # Update summary cards
+        total_waste = get_total_waste_quantity()
+        avg_waste = total_waste / len(waste_entries) if waste_entries else 0
+        reasons_data = get_waste_by_reason()
+        # Count unique items
+        unique_items = len(set(w['item'] for w in waste_entries))
+        
+        self.update_card_value(self.total_waste_card, str(total_waste))
+        self.update_card_value(self.avg_waste_card, f"{avg_waste:.1f}")
+        self.update_card_value(self.reasons_card, str(len(reasons_data)))
+        self.update_card_value(self.items_card, str(unique_items))
+    
+    def update_card_value(self, card: QFrame, value: str):
+        """Update the value in a summary card"""
+        value_label = card.findChild(QLabel, "valueLabel")
+        if value_label:
+            value_label.setText(value)
     
     def populate_table(self, waste_entries):
         """Populate table with waste entries"""
@@ -348,24 +398,6 @@ class WastePage(QWidget):
         ]
         self.populate_table(filtered)
     
-    def update_chart(self):
-        """Update the waste by reason chart"""
-        waste_data = get_waste_by_reason()
-        
-        # Clear existing chart
-        layout = self.chart_container.layout()
-        if layout:
-            while layout.count():
-                item = layout.takeAt(0)
-                if item.widget():
-                    item.widget().deleteLater()
-        else:
-            layout = QVBoxLayout(self.chart_container)
-            layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Create new chart
-        chart = create_waste_by_reason_chart(waste_data)
-        layout.addWidget(chart)
     
     def add_waste(self):
         """Add a new waste entry"""

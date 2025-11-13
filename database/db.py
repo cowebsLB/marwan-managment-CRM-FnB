@@ -4,11 +4,22 @@ Handles SQLite database initialization, CRUD operations, and seed data
 """
 import sqlite3
 import os
+import sys
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "restaurant_crm.db")
+def get_base_path():
+    """Get the base path for the application (works with PyInstaller)"""
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        return os.path.dirname(sys.executable)
+    else:
+        # Running as script
+        return os.path.dirname(os.path.dirname(__file__))
+
+
+DB_PATH = os.path.join(get_base_path(), "restaurant_crm.db")
 
 
 def get_connection():
@@ -329,9 +340,148 @@ def get_waste_by_reason() -> List[Tuple[str, int]]:
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT reason, SUM(quantity) as total FROM waste GROUP BY reason ORDER BY total DESC"
+        "SELECT COALESCE(reason, 'Unknown') as reason, SUM(quantity) as total FROM waste GROUP BY reason ORDER BY total DESC"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row[0] or 'Unknown', row[1] or 0) for row in rows]
+
+
+# Enhanced analytics functions
+def get_total_inventory_value() -> float:
+    """Get total inventory value (sum of quantity * unit_price)"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COALESCE(SUM(quantity * unit_price), 0) FROM products")
+    total = cursor.fetchone()[0]
+    conn.close()
+    return total
+
+
+def get_products_by_category() -> List[Tuple[str, int]]:
+    """Get product count grouped by category"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT category, COUNT(*) as count FROM products WHERE category IS NOT NULL AND category != '' GROUP BY category ORDER BY count DESC"
     )
     rows = cursor.fetchall()
     conn.close()
     return [(row[0], row[1]) for row in rows]
 
+
+def get_all_categories() -> List[str]:
+    """Get all unique categories from products"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+
+def get_inventory_value_by_category() -> List[Tuple[str, float]]:
+    """Get inventory value grouped by category"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT category, COALESCE(SUM(quantity * unit_price), 0) as value FROM products WHERE category IS NOT NULL AND category != '' GROUP BY category ORDER BY value DESC"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row[0], row[1]) for row in rows]
+
+
+def get_low_stock_products(threshold: int = 20) -> List[Dict]:
+    """Get products with quantity below threshold"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM products WHERE quantity < ? ORDER BY quantity ASC",
+        (threshold,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_average_product_price() -> float:
+    """Get average product unit price"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COALESCE(AVG(unit_price), 0) FROM products")
+    avg = cursor.fetchone()[0]
+    conn.close()
+    return avg
+
+
+def get_waste_by_item() -> List[Tuple[str, int]]:
+    """Get waste grouped by item"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT COALESCE(item, 'Unknown') as item, SUM(quantity) as total FROM waste GROUP BY item ORDER BY total DESC LIMIT 10"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row[0] or 'Unknown', row[1] or 0) for row in rows]
+
+
+def get_waste_trend() -> List[Tuple[str, int]]:
+    """Get waste quantity by date"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT date, SUM(quantity) as total FROM waste GROUP BY date ORDER BY date DESC LIMIT 7"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row[0], row[1]) for row in rows]
+
+
+def get_assets_by_type() -> List[Tuple[str, int]]:
+    """Get asset count grouped by type"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT COALESCE(type, 'Unknown') as type, COUNT(*) as count FROM assets WHERE type IS NOT NULL AND type != '' GROUP BY type ORDER BY count DESC"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row[0] or 'Unknown', row[1] or 0) for row in rows]
+
+
+def get_assets_by_condition() -> List[Tuple[str, int]]:
+    """Get asset count grouped by condition"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT COALESCE(condition, 'Unknown') as condition, COUNT(*) as count FROM assets WHERE condition IS NOT NULL AND condition != '' GROUP BY condition ORDER BY count DESC"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row[0] or 'Unknown', row[1] or 0) for row in rows]
+
+
+def get_assets_value_by_type() -> List[Tuple[str, float]]:
+    """Get asset value grouped by type"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT COALESCE(type, 'Unknown') as type, COALESCE(SUM(value), 0) as total_value FROM assets WHERE type IS NOT NULL AND type != '' GROUP BY type ORDER BY total_value DESC"
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [(row[0] or 'Unknown', float(row[1] or 0)) for row in rows]
+
+
+def get_average_asset_value() -> float:
+    """Get average asset value"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COALESCE(AVG(value), 0) FROM assets")
+    avg = cursor.fetchone()[0]
+    conn.close()
+    return avg
