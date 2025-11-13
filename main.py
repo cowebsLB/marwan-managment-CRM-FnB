@@ -8,7 +8,8 @@ from PyQt6.QtWidgets import (
     QPushButton, QStackedWidget, QLabel, QFrame
 )
 from PyQt6.QtCore import Qt, QSize, QTimer
-from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtGui import QFont, QIcon, QPixmap, QPainter, QColor
+from utils.icons import get_icon, create_icon_button
 
 from database.db import init_database
 from ui.dashboard import DashboardPage
@@ -87,25 +88,40 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(20, 30, 20, 20)
         layout.setSpacing(10)
         
-        # Logo/Title
+        # Logo/Title section
+        title_container = QWidget()
+        title_layout = QVBoxLayout(title_container)
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.setSpacing(5)
+        
         title = QLabel("Marwan CRM")
-        title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
+        title.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title)
+        title.setStyleSheet("color: #2c3e50; padding: 10px 0px;")
+        title_layout.addWidget(title)
         
-        subtitle = QLabel("Food & Beverage")
-        subtitle.setFont(QFont("Arial", 10))
+        subtitle = QLabel("Food & Beverage Management")
+        subtitle.setFont(QFont("Segoe UI", 9))
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        subtitle.setStyleSheet("color: #7f8c8d; margin-bottom: 20px;")
-        layout.addWidget(subtitle)
+        subtitle.setStyleSheet("color: #7f8c8d; padding-bottom: 15px;")
+        title_layout.addWidget(subtitle)
         
-        layout.addSpacing(20)
+        layout.addWidget(title_container)
         
-        # Navigation buttons
-        self.btn_dashboard = QPushButton("📊 Dashboard")
-        self.btn_products = QPushButton("📦 Products")
-        self.btn_waste = QPushButton("🗑️ Waste")
-        self.btn_assets = QPushButton("💼 Assets")
+        # Separator line
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setStyleSheet("color: #e0e0e0; margin: 10px 0px;")
+        layout.addWidget(separator)
+        
+        layout.addSpacing(10)
+        
+        # Navigation buttons with icons
+        self.btn_dashboard = create_icon_button("Dashboard", "dashboard")
+        self.btn_products = create_icon_button("Products", "products")
+        self.btn_waste = create_icon_button("Waste", "waste")
+        self.btn_assets = create_icon_button("Assets", "assets")
         
         buttons = [
             self.btn_dashboard,
@@ -115,9 +131,10 @@ class MainWindow(QMainWindow):
         ]
         
         for btn in buttons:
-            btn.setFixedHeight(50)
+            btn.setFixedHeight(48)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setObjectName("navButton")
+            btn.setIconSize(QSize(20, 20))
             layout.addWidget(btn)
         
         # Connect buttons
@@ -141,7 +158,8 @@ class MainWindow(QMainWindow):
         
         # Title (will be updated based on current page)
         self.page_title = QLabel("Dashboard")
-        self.page_title.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        self.page_title.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+        self.page_title.setStyleSheet("color: #2c3e50; padding: 5px 0px;")
         layout.addWidget(self.page_title)
         
         layout.addStretch()
@@ -171,26 +189,33 @@ class MainWindow(QMainWindow):
                         background-color: #3498db;
                         color: white;
                         border: none;
-                        border-radius: 8px;
+                        border-radius: 6px;
                         text-align: left;
-                        padding-left: 15px;
+                        padding: 12px 15px;
                         font-size: 14px;
-                        font-weight: bold;
+                        font-weight: 600;
+                        font-family: 'Segoe UI';
+                    }
+                    QPushButton#navButton:hover {
+                        background-color: #2980b9;
                     }
                 """)
             else:
                 btn.setStyleSheet("""
                     QPushButton#navButton {
                         background-color: transparent;
-                        color: #2c3e50;
+                        color: #34495e;
                         border: none;
-                        border-radius: 8px;
+                        border-radius: 6px;
                         text-align: left;
-                        padding-left: 15px;
+                        padding: 12px 15px;
                         font-size: 14px;
+                        font-weight: 500;
+                        font-family: 'Segoe UI';
                     }
                     QPushButton#navButton:hover {
-                        background-color: #ecf0f1;
+                        background-color: #f8f9fa;
+                        color: #2c3e50;
                     }
                 """)
         
@@ -220,27 +245,16 @@ class MainWindow(QMainWindow):
         """Apply application-wide styles"""
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #f5f6fa;
+                background-color: #f5f7fa;
             }
             QFrame#sidebar {
                 background-color: #ffffff;
-                border-right: 1px solid #e0e0e0;
+                border-right: 1px solid #e1e8ed;
             }
             QFrame#topBar {
                 background-color: #ffffff;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            QPushButton#navButton {
-                background-color: transparent;
-                color: #2c3e50;
-                border: none;
-                border-radius: 8px;
-                text-align: left;
-                padding-left: 15px;
-                font-size: 14px;
-            }
-            QPushButton#navButton:hover {
-                background-color: #ecf0f1;
+                border-bottom: 2px solid #e1e8ed;
+                padding: 0px;
             }
         """)
 

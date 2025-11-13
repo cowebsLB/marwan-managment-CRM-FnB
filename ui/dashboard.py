@@ -25,7 +25,8 @@ class DashboardPage(QWidget):
         
         # Title
         title = QLabel("Dashboard Overview")
-        title.setFont(QFont("Arial", 20, QFont.Weight.Bold))
+        title.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        title.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
         layout.addWidget(title)
         
         # Metrics cards
@@ -49,11 +50,19 @@ class DashboardPage(QWidget):
         # Waste by reason chart
         chart_frame = QFrame()
         chart_frame.setObjectName("chartFrame")
+        chart_frame.setStyleSheet("""
+            QFrame#chartFrame {
+                background-color: white;
+                border: 1px solid #e1e8ed;
+                border-radius: 8px;
+            }
+        """)
         chart_layout = QVBoxLayout(chart_frame)
-        chart_layout.setContentsMargins(15, 15, 15, 15)
+        chart_layout.setContentsMargins(20, 20, 20, 20)
         
         chart_title = QLabel("Waste by Reason")
-        chart_title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        chart_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        chart_title.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
         chart_layout.addWidget(chart_title)
         
         self.chart_container = QWidget()
@@ -65,29 +74,33 @@ class DashboardPage(QWidget):
         layout.addStretch()
     
     def create_metric_card(self, title: str, value: str, color: str) -> QFrame:
-        """Create a metric card widget"""
+        """Create a professional metric card widget"""
         card = QFrame()
         card.setObjectName("metricCard")
-        card.setFixedHeight(150)
+        card.setFixedHeight(160)
         card.setStyleSheet(f"""
             QFrame#metricCard {{
                 background-color: white;
-                border-radius: 10px;
-                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                border: 1px solid #e1e8ed;
+            }}
+            QFrame#metricCard:hover {{
+                border: 1px solid {color};
+                box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
             }}
         """)
         
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(10)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(12)
         
         title_label = QLabel(title)
-        title_label.setFont(QFont("Arial", 12))
-        title_label.setStyleSheet("color: #7f8c8d;")
+        title_label.setFont(QFont("Segoe UI", 11))
+        title_label.setStyleSheet("color: #7f8c8d; font-weight: 500;")
         layout.addWidget(title_label)
         
         value_label = QLabel(value)
-        value_label.setFont(QFont("Arial", 32, QFont.Weight.Bold))
+        value_label.setFont(QFont("Segoe UI", 36, QFont.Weight.Bold))
         value_label.setStyleSheet(f"color: {color};")
         value_label.setObjectName("valueLabel")
         layout.addWidget(value_label)

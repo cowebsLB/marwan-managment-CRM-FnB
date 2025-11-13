@@ -6,8 +6,9 @@ from PyQt6.QtWidgets import (
     QTableWidgetItem, QLineEdit, QDialog, QFormLayout, QMessageBox,
     QHeaderView, QAbstractItemView, QDateEdit, QSplitter
 )
-from PyQt6.QtCore import Qt, QDate
+from PyQt6.QtCore import Qt, QDate, QSize
 from PyQt6.QtGui import QFont
+from utils.icons import get_icon, create_icon_button
 
 from database.db import (
     get_all_waste, add_waste, update_waste, delete_waste, get_waste,
@@ -95,7 +96,8 @@ class WastePage(QWidget):
         header = QHBoxLayout()
         
         title = QLabel("Waste Management")
-        title.setFont(QFont("Arial", 20, QFont.Weight.Bold))
+        title.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        title.setStyleSheet("color: #2c3e50;")
         header.addWidget(title)
         
         header.addStretch()
@@ -104,20 +106,75 @@ class WastePage(QWidget):
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search waste entries...")
         self.search_input.setFixedWidth(300)
+        self.search_input.setFixedHeight(35)
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 13px;
+                background-color: white;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+            }
+        """)
         self.search_input.textChanged.connect(self.filter_table)
         header.addWidget(self.search_input)
         
-        # Action buttons
-        btn_add = QPushButton("➕ Add Waste Entry")
+        # Action buttons with icons
+        btn_add = create_icon_button("Add Waste Entry", "add")
         btn_add.setFixedHeight(35)
+        btn_add.setStyleSheet("""
+            QPushButton {
+                background-color: #e74c3c;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #c0392b;
+            }
+        """)
         btn_add.clicked.connect(self.add_waste)
         
-        btn_export_csv = QPushButton("📥 Export CSV")
+        btn_export_csv = create_icon_button("Export CSV", "export")
         btn_export_csv.setFixedHeight(35)
+        btn_export_csv.setStyleSheet("""
+            QPushButton {
+                background-color: #95a5a6;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #7f8c8d;
+            }
+        """)
         btn_export_csv.clicked.connect(lambda: self.export_data('csv'))
         
-        btn_export_excel = QPushButton("📊 Export Excel")
+        btn_export_excel = create_icon_button("Export Excel", "export")
         btn_export_excel.setFixedHeight(35)
+        btn_export_excel.setStyleSheet("""
+            QPushButton {
+                background-color: #16a085;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #138d75;
+            }
+        """)
         btn_export_excel.clicked.connect(lambda: self.export_data('excel'))
         
         header.addWidget(btn_add)
@@ -141,6 +198,32 @@ class WastePage(QWidget):
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background-color: white;
+                border: 1px solid #e1e8ed;
+                border-radius: 6px;
+                gridline-color: #f0f0f0;
+                font-size: 13px;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border: none;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QHeaderView::section {
+                background-color: #f8f9fa;
+                padding: 10px;
+                border: none;
+                border-bottom: 2px solid #e1e8ed;
+                font-weight: 600;
+                font-size: 12px;
+                color: #2c3e50;
+            }
+        """)
         
         # Context menu for edit/delete
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -151,12 +234,20 @@ class WastePage(QWidget):
         
         # Chart widget
         chart_widget = QWidget()
+        chart_widget.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                border: 1px solid #e1e8ed;
+                border-radius: 8px;
+            }
+        """)
         chart_layout = QVBoxLayout(chart_widget)
-        chart_layout.setContentsMargins(15, 15, 15, 15)
+        chart_layout.setContentsMargins(20, 20, 20, 20)
         
         chart_title = QLabel("Waste by Reason")
-        chart_title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        chart_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         chart_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        chart_title.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
         chart_layout.addWidget(chart_title)
         
         self.chart_container = QWidget()
@@ -307,8 +398,10 @@ class WastePage(QWidget):
         from PyQt6.QtWidgets import QMenu
         
         menu = QMenu(self)
-        edit_action = menu.addAction("✏️ Edit")
-        delete_action = menu.addAction("🗑️ Delete")
+        edit_icon = get_icon('edit')
+        delete_icon = get_icon('delete')
+        edit_action = menu.addAction(edit_icon, "Edit")
+        delete_action = menu.addAction(delete_icon, "Delete")
         
         action = menu.exec(self.table.mapToGlobal(position))
         
