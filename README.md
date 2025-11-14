@@ -1,18 +1,19 @@
-# Marwan Management CRM - Food & Beverage
+# Marwan Management CRM - Food & Beverage (Sample product for presentation)
 
 A professional desktop CRM application for restaurant management built with PyQt6. Manage products, track waste, monitor assets, and analyze data with comprehensive analytics.
 
 ## Features
 
-- **📊 Dashboard**: Overview with key metrics and visual charts
+- **📊 Dashboard**: Overview with key metrics and visual charts with percentage calculations
 - **📦 Products Management**: Full CRUD operations with category autofill
 - **🗑️ Waste Tracking**: Monitor waste with detailed reporting and trend analysis
 - **💼 Assets Management**: Track restaurant equipment and assets
-- **📈 Analytics Page**: Comprehensive analytics and visualizations for all data
+- **📈 Analytics Page**: Comprehensive analytics and visualizations with percentage breakdowns for all data
 - **🔍 Search & Filter**: Quick search across all modules
 - **📤 Export**: Export data to CSV or Excel formats
 - **🔄 Automatic Updates**: Built-in update system via GitHub releases
 - **✨ Modern UI**: Beautiful splash screen and smooth animations
+- **⚙️ Setup Wizard**: First-run setup wizard for easy configuration (installation directory, database location, shortcuts, initial settings)
 
 ## Download
 
@@ -28,8 +29,9 @@ Download the latest release from the [Releases](https://github.com/cowebsLB/marw
 1. Download `MarwanManagementCRM.exe` from the releases page
 2. Place it in a folder of your choice
 3. Double-click to run
+4. Complete the setup wizard on first launch (configure installation directory, database location, shortcuts, and initial settings)
 
-**Note:** The database (`restaurant_crm.db`) will be automatically created in the same directory as the executable on first run.
+**Note:** The database (`restaurant_crm.db`) will be automatically created in the configured location during setup. The setup wizard only appears on first run.
 
 ## Development Setup
 
@@ -116,6 +118,7 @@ The application includes an automatic update system that checks for new releases
 ```
 marwan-managment-CRM-FnB/
 ├── main.py                 # Main application entry point
+├── LICENSE.txt             # End User License Agreement
 ├── database/
 │   └── db.py              # Database operations and initialization
 ├── ui/
@@ -124,11 +127,14 @@ marwan-managment-CRM-FnB/
 │   ├── waste.py           # Waste tracking page
 │   ├── assets.py          # Assets management page
 │   ├── analytics.py       # Analytics and reports page
-│   └── splash.py          # Splash screen
+│   ├── splash.py          # Splash screen
+│   └── setup_wizard.py    # First-run setup wizard
 ├── utils/
-│   ├── charts.py          # Chart generation utilities
+│   ├── charts.py          # Chart generation utilities with percentage calculations
 │   ├── helpers.py         # Helper functions and utilities
 │   ├── icons.py           # Icon utilities
+│   ├── config.py          # Configuration management
+│   ├── shortcuts.py       # Cross-platform shortcut creation
 │   ├── updater.py         # Update system core logic
 │   └── updater_ui.py      # Update system UI
 ├── build_exe.py           # Build script for executable
@@ -163,13 +169,14 @@ marwan-managment-CRM-FnB/
 - Calculate total asset value
 
 ### Analytics
-- Products by category (pie chart)
-- Inventory value by category (bar chart)
-- Waste by reason (bar chart)
-- Top wasted items (bar chart)
-- Waste trend over time (line chart)
-- Assets by type and condition (pie charts)
-- Asset value by type (bar chart)
+- Products by category (pie chart with percentages)
+- Inventory value by category (bar chart with percentages)
+- Waste by reason (bar chart with percentages)
+- Top wasted items (bar chart with percentages)
+- Waste trend over time (line chart with percentage changes)
+- Assets by type and condition (pie charts with percentages)
+- Asset value by type (bar chart with percentages)
+- All charts display percentage breakdowns for better insights
 
 ## Version
 

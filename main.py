@@ -18,7 +18,9 @@ from ui.waste import WastePage
 from ui.assets import AssetsPage
 from ui.analytics import AnalyticsPage
 from ui.splash import SplashScreen
+from ui.setup_wizard import SetupWizard
 from utils.updater_ui import show_update_dialog
+from utils.config import is_setup_complete, should_rerun_wizard
 
 
 class MainWindow(QMainWindow):
@@ -326,16 +328,42 @@ def main():
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     
-    # Create and show splash screen
-    splash = SplashScreen()
-    splash.show()
-    splash.fade_in()
+    # Skip setup wizard when running as script (development mode)
+    # Only show wizard when running as compiled executable
+    is_compiled = getattr(sys, 'frozen', False)
     
-    # Process events to ensure splash is visible
-    app.processEvents()
-    
-    # Small delay to show splash
-    QTimer.singleShot(300, lambda: load_application(app, splash))
+    # Check if setup is needed (only for compiled executable)
+    if is_compiled and (not is_setup_complete() or should_rerun_wizard()):
+        # Show setup wizard
+        wizard = SetupWizard()
+        wizard.show()
+        wizard.fade_in()
+        
+        def on_wizard_finished(launch_app: bool):
+            """Handle wizard completion"""
+            if launch_app:
+                # Setup complete, launch main application
+                splash = SplashScreen()
+                splash.show()
+                splash.fade_in()
+                app.processEvents()
+                QTimer.singleShot(300, lambda: load_application(app, splash))
+            else:
+                # User cancelled or chose not to launch
+                app.quit()
+        
+        wizard.finished.connect(on_wizard_finished)
+    else:
+        # Development mode or setup already complete, show splash and load application
+        splash = SplashScreen()
+        splash.show()
+        splash.fade_in()
+        
+        # Process events to ensure splash is visible
+        app.processEvents()
+        
+        # Small delay to show splash
+        QTimer.singleShot(300, lambda: load_application(app, splash))
     
     # Start the application event loop
     sys.exit(app.exec())

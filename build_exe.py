@@ -28,6 +28,7 @@ args = [
     '--hidden-import=psutil',
     '--collect-all=matplotlib',
     '--collect-all=PyQt6',
+    '--add-data=LICENSE.txt;.',  # Include LICENSE.txt in the executable (Windows uses ; as separator)
     '--noconfirm',  # Overwrite output directory without asking
     '--clean',  # Clean PyInstaller cache before building
 ]

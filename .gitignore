@@ -46,3 +46,7 @@ Thumbs.db
 # Logs
 *.log
 
+# Application config (user-generated)
+config.json
+setup.log
+

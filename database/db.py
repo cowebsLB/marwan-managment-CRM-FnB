@@ -19,7 +19,22 @@ def get_base_path():
         return os.path.dirname(os.path.dirname(__file__))
 
 
-DB_PATH = os.path.join(get_base_path(), "restaurant_crm.db")
+def get_db_path():
+    """Get database path from config or use default"""
+    try:
+        from utils.config import get_config_value
+        custom_path = get_config_value("database_path")
+        if custom_path and os.path.isabs(custom_path):
+            return custom_path
+    except (ImportError, Exception):
+        # Config module not available or error reading config, use default
+        pass
+    
+    # Default path
+    return os.path.join(get_base_path(), "restaurant_crm.db")
+
+
+DB_PATH = get_db_path()
 
 
 def get_connection():

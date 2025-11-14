@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 def create_waste_by_reason_chart(data: List[Tuple[str, int]]) -> FigureCanvasQTAgg:
-    """Create a bar chart for waste by reason"""
+    """Create a bar chart for waste by reason with percentages"""
     fig = Figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
     
@@ -32,6 +32,10 @@ def create_waste_by_reason_chart(data: List[Tuple[str, int]]) -> FigureCanvasQTA
             reasons = [item[0] for item in valid_data]
             quantities = [item[1] for item in valid_data]
             
+            # Calculate percentages
+            total = sum(quantities) if quantities else 1
+            percentages = [(q / total * 100) if total > 0 else 0 for q in quantities]
+            
             # Truncate long reason names
             truncated_reasons = [reason[:15] + '...' if len(reason) > 15 else reason for reason in reasons]
             
@@ -42,11 +46,12 @@ def create_waste_by_reason_chart(data: List[Tuple[str, int]]) -> FigureCanvasQTA
             ax.tick_params(axis='x', rotation=45, labelsize=9)
             ax.tick_params(axis='y', labelsize=9)
             
-            # Add value labels on bars
-            for bar in bars:
+            # Add value and percentage labels on bars
+            for i, bar in enumerate(bars):
                 height = bar.get_height()
+                pct = percentages[i]
                 ax.text(bar.get_x() + bar.get_width()/2., height + height*0.02,
-                       f'{int(height)}',
+                       f'{int(height)}\n({pct:.1f}%)',
                        ha='center', va='bottom', fontsize=8)
     
     fig.tight_layout(pad=2.5)
@@ -122,6 +127,10 @@ def create_bar_chart(data: List[Tuple[str, float]], title: str, xlabel: str, yla
             labels = [item[0] for item in valid_data]
             values = [item[1] for item in valid_data]
         
+            # Calculate percentages
+            total = sum(values) if values else 1
+            percentages = [(v / total * 100) if total > 0 else 0 for v in values]
+            
             if horizontal:
                 # Truncate long labels for horizontal bars
                 truncated_labels = [label[:20] + '...' if len(label) > 20 else label for label in labels]
@@ -129,11 +138,13 @@ def create_bar_chart(data: List[Tuple[str, float]], title: str, xlabel: str, yla
                 ax.set_xlabel(xlabel, fontsize=10)
                 ax.set_ylabel(ylabel, fontsize=10)
                 ax.tick_params(axis='y', labelsize=9)
-                # Add value labels
+                # Add value and percentage labels
                 for i, bar in enumerate(bars):
                     width = bar.get_width()
+                    pct = percentages[i]
+                    value_str = f'{width:.1f}' if isinstance(values[i], float) else f'{int(width)}'
                     ax.text(width + width*0.02, bar.get_y() + bar.get_height()/2.,
-                           f'{width:.1f}' if isinstance(values[i], float) else f'{int(width)}',
+                           f'{value_str} ({pct:.1f}%)',
                            ha='left', va='center', fontsize=8)
             else:
                 # Truncate long labels for vertical bars
@@ -142,11 +153,13 @@ def create_bar_chart(data: List[Tuple[str, float]], title: str, xlabel: str, yla
                 ax.set_xlabel(xlabel, fontsize=10)
                 ax.set_ylabel(ylabel, fontsize=10)
                 ax.tick_params(axis='x', rotation=45, labelsize=9)
-                # Add value labels
-                for bar in bars:
+                # Add value and percentage labels
+                for i, bar in enumerate(bars):
                     height = bar.get_height()
+                    pct = percentages[i]
+                    value_str = f'{height:.1f}' if isinstance(height, float) else f'{int(height)}'
                     ax.text(bar.get_x() + bar.get_width()/2., height + height*0.02,
-                           f'{height:.1f}' if isinstance(height, float) else f'{int(height)}',
+                           f'{value_str}\n({pct:.1f}%)',
                            ha='center', va='bottom', fontsize=8)
             
             ax.set_title(title, fontsize=12, fontweight='bold', pad=15)
@@ -198,11 +211,22 @@ def create_line_chart(data: List[Tuple[str, float]], title: str, xlabel: str, yl
             ax.tick_params(axis='y', labelsize=9)
             ax.grid(True, alpha=0.3)
             
-            # Add value labels
+            # Add value labels with percentage change from previous point
             max_value = max(values) if values else 1
             offset = max_value * 0.05 if max_value > 0 else 1
             for i, (label, value) in enumerate(zip(formatted_labels, values)):
-                ax.text(i, value + offset, f'{int(value)}', ha='center', va='bottom', fontsize=8)
+                value_label = f'{int(value)}'
+                # Calculate percentage change from previous point
+                if i > 0 and values[i-1] > 0:
+                    pct_change = ((value - values[i-1]) / values[i-1]) * 100
+                    if abs(pct_change) > 0.1:  # Only show if change is significant
+                        value_label += f'\n({pct_change:+.1f}%)'
+                elif i == 0 and len(values) > 1 and values[1] > 0:
+                    # Show percentage of total for first point
+                    total = sum(values)
+                    pct = (value / total * 100) if total > 0 else 0
+                    value_label += f'\n({pct:.1f}%)'
+                ax.text(i, value + offset, value_label, ha='center', va='bottom', fontsize=8)
     
     fig.tight_layout(pad=2.5)
     canvas = FigureCanvasQTAgg(fig)
